@@ -8,14 +8,14 @@
 #   Date: 2021/11/18
 # --------------------------------------------------------------------
 
+import argparse
+import math
+import matplotlib.pyplot as plt
+import networkx as netx
+import random
 # import modules -----------------------------------------------------
 import sys
 import time
-import math
-import random
-import argparse
-import networkx as netx
-import matplotlib.pyplot as plt
 
 # constant -----------------------------------------------------------
 TIME_LIMIT = 5 * 60  # default time limit for multi-start local search
@@ -23,6 +23,7 @@ RANDOM_SEED = 0  # default random seed
 OR_OPT_SIZE = 3  # size of sub-path (or_opt_search)
 NB_LIST_SIZE = 20  # size of neighbor-list
 INTVL_TIME = 1.0  # interval time for display logs
+
 
 # --------------------------------------------------------------------
 #   TSP data
@@ -45,7 +46,7 @@ class Tsp:
         # read data
         for i in range(len(data)):
             data[i] = (data[i].rstrip()).split()
-            data[i] = list(filter(lambda str:str != ':', data[i]))  # remove colon
+            data[i] = list(filter(lambda str: str != ':', data[i]))  # remove colon
             if len(data[i]) > 0:
                 data[i][0] = data[i][0].rstrip(':')
                 if data[i][0] == 'NAME':
@@ -65,9 +66,9 @@ class Tsp:
 
         # coord section
         self.coord = [(0.0, 0.0)] * self.num_node
-        line_cnt = sec_coord+1
+        line_cnt = sec_coord + 1
         for i in range(self.num_node):
-            (self.coord)[int(data[line_cnt][0])-1] = (float(data[line_cnt][1]),float(data[line_cnt][2]))
+            (self.coord)[int(data[line_cnt][0]) - 1] = (float(data[line_cnt][1]), float(data[line_cnt][2]))
             line_cnt += 1
 
     # print TSP data -------------------------------------------------
@@ -78,18 +79,18 @@ class Tsp:
         print('coord:\t{}'.format(self.coord))
 
     # calculate distance (rounded euclidian distance in 2D) ----------
-    def dist(self,v1,v2):
+    def dist(self, v1, v2):
         xd = float((self.coord)[v1][0] - (self.coord)[v2][0])
         yd = float((self.coord)[v1][1] - (self.coord)[v2][1])
-        return int(math.sqrt(xd * xd + yd * yd)+0.5)
+        return int(math.sqrt(xd * xd + yd * yd) + 0.5)
 
     # construct neighbor-list ----------------------------------------
     def gen_neighbor(self):
         self.neighbor = [[] for _ in range(self.num_node)]
         for i in range(self.num_node):
-            temp = [(self.dist(i,j),j) for j in range(self.num_node) if j != i]
+            temp = [(self.dist(i, j), j) for j in range(self.num_node) if j != i]
             temp.sort(key=lambda x: x[0])
-            (self.neighbor)[i] = [temp[h][1] for h in range(min(NB_LIST_SIZE,self.num_node))]
+            (self.neighbor)[i] = [temp[h][1] for h in range(min(NB_LIST_SIZE, self.num_node))]
 
 
 # --------------------------------------------------------------------
@@ -97,22 +98,22 @@ class Tsp:
 # --------------------------------------------------------------------
 class Work:
     # constructor ----------------------------------------------------
-    def __init__(self,tsp):
+    def __init__(self, tsp):
         self.tour = [i for i in range(tsp.num_node)]  # tour of salesman
         self.pos = [i for i in range(tsp.num_node)]  # position of nodes in tour
         self.obj = self.length(tsp)  # objective value
 
     # copy -----------------------------------------------------------
-    def copy(self,org):
+    def copy(self, org):
         self.tour = org.tour[:]
         self.pos = org.pos[:]
         self.obj = org.obj
 
     # calculate tour length ------------------------------------------
-    def length(self,tsp):
+    def length(self, tsp):
         length = 0
         for i in range(len(self.tour)):
-            length += tsp.dist((self.tour)[i],(self.tour)[(i+1) % len(self.tour)])
+            length += tsp.dist((self.tour)[i], (self.tour)[(i + 1) % len(self.tour)])
         return length
 
     # set position ---------------------------------------------------
@@ -121,19 +122,19 @@ class Work:
             (self.pos)[(self.tour)[i]] = i
 
     # next node in tour ----------------------------------------------
-    def next(self,v):
-        return (self.tour)[((self.pos)[v]+1) % len(self.tour)]
+    def next(self, v):
+        return (self.tour)[((self.pos)[v] + 1) % len(self.tour)]
 
     # previous node in tour ------------------------------------------
-    def prev(self,v):
-        return (self.tour)[((self.pos)[v]-1) % len(self.tour)]
+    def prev(self, v):
+        return (self.tour)[((self.pos)[v] - 1) % len(self.tour)]
 
     # write WORK data ------------------------------------------------
-    def write(self,tsp):
+    def write(self, tsp):
         return self.length(tsp)
 
     # draw obtained tour ---------------------------------------------
-    def draw(self,tsp, filename):
+    def draw(self, tsp, filename):
         graph = netx.Graph()
         graph.add_nodes_from([i for i in range(tsp.num_node)])
         coord = {i: ((tsp.coord)[i][0], (tsp.coord)[i][1]) for i in range(tsp.num_node)}
@@ -154,12 +155,12 @@ class Work:
 def nearest_neighbor(tsp, work):
     print('\n[nearest neighbor algorithm]')
     # nearest neighbor
-    for i in range(1,tsp.num_node):
+    for i in range(1, tsp.num_node):
         # find nearest unvisited node
         min_dist = float('inf')
         arg_min_dist = None
-        for j in range(i,tsp.num_node):
-            dist = tsp.dist((work.tour)[i-1],(work.tour)[j])
+        for j in range(i, tsp.num_node):
+            dist = tsp.dist((work.tour)[i - 1], (work.tour)[j])
             if dist < min_dist:
                 min_dist = dist
                 arg_min_dist = j
@@ -193,7 +194,9 @@ def simulated_annealing(tsp, work, time_limit):
         for k in range(num_sample):
             u = random.choice(work.tour)
             v = random.choice(tsp.neighbor[u])
-            delta = tsp.dist(u,v) + tsp.dist(work.next(u),work.next(v)) - tsp.dist(u,work.next(u)) - tsp.dist(v,work.next(v))
+            delta = tsp.dist(u, v) + tsp.dist(work.next(u), work.next(v)) - tsp.dist(u, work.next(u)) - tsp.dist(v,
+                                                                                                                 work.next(
+                                                                                                                     v))
             if delta > 0:
                 avg_delta += delta
                 cnt += 1
@@ -216,19 +219,20 @@ def simulated_annealing(tsp, work, time_limit):
     while cur_time - start_time < time_limit:
         cur_time = time.time()
         # set temperature
-        #temp = max_temp + (min_temp - max_temp) * (cur_time - start_time) / time_limit
-        temp = math.pow(max_temp, 1.0 - (cur_time - start_time) / time_limit) * math.pow(min_temp, (cur_time - start_time) / time_limit)
+        # temp = max_temp + (min_temp - max_temp) * (cur_time - start_time) / time_limit
+        temp = math.pow(max_temp, 1.0 - (cur_time - start_time) / time_limit) * math.pow(min_temp, (
+                    cur_time - start_time) / time_limit)
         # random neighborhood operation
-        nb_set = ['two_opt','or_opt','three_opt_type134','three_opt_type2']
+        nb_set = ['two_opt', 'or_opt', 'three_opt_type134', 'three_opt_type2']
         for nb in nb_set:
-            if eval(nb)(tsp,cur_work,temp):
+            if eval(nb)(tsp, cur_work, temp):
                 break
         # update best working data
         if cur_work.obj < work.obj:
             work.copy(cur_work)
-            print('{}\t{}*\t{}\t{:.2f}'.format(cnt,cur_work.obj,work.obj,cur_time-start_time))
+            print('{}\t{}*\t{}\t{:.2f}'.format(cnt, cur_work.obj, work.obj, cur_time - start_time))
         elif cur_time - disp_time > INTVL_TIME:
-            print('{}\t{}\t{}\t{:.2f}'.format(cnt,cur_work.obj,work.obj,cur_time-start_time))
+            print('{}\t{}\t{}\t{:.2f}'.format(cnt, cur_work.obj, work.obj, cur_time - start_time))
             disp_time = time.time()
         cnt += 1
 
@@ -247,8 +251,8 @@ def simulated_annealing(tsp, work, time_limit):
 def two_opt(tsp, work, temp):
     # evaluate difference for 2-opt operation
     def eval_diff(tsp, work, u, v):
-        cur = tsp.dist(u,work.next(u)) + tsp.dist(v,work.next(v))
-        new = tsp.dist(u,v) + tsp.dist(work.next(u),work.next(v))
+        cur = tsp.dist(u, work.next(u)) + tsp.dist(v, work.next(v))
+        new = tsp.dist(u, v) + tsp.dist(work.next(u), work.next(v))
         return new - cur
 
     # change tour by 2-opt operation
@@ -258,7 +262,7 @@ def two_opt(tsp, work, temp):
         else:
             i, j = (work.pos)[v], (work.pos)[u]
         # reverse sub-path [i+1,...,j]
-        (work.tour)[i+1:j+1] = list(reversed((work.tour)[i+1:j+1]))
+        (work.tour)[i + 1:j + 1] = list(reversed((work.tour)[i + 1:j + 1]))
         # update positions
         work.set_pos()
         # update objective value
@@ -269,7 +273,7 @@ def two_opt(tsp, work, temp):
     v = random.choice(tsp.neighbor[u])
     # evaluate difference
     delta = eval_diff(tsp, work, u, v)
-    if delta < 0 or math.exp(-delta/temp) > random.random():
+    if delta < 0 or math.exp(-delta / temp) > random.random():
         # change tour
         change_tour(tsp, work, u, v)
         return True
@@ -286,27 +290,27 @@ def two_opt(tsp, work, temp):
 #   size(I): length of subpath
 #   return: [True] improved
 # --------------------------------------------------------------------
-def or_opt(tsp, work, temp, size = OR_OPT_SIZE):
+def or_opt(tsp, work, temp, size=OR_OPT_SIZE):
     # evaluate difference for Or-opt operation
     def eval_diff(tsp, work, s, u, v):
         i = (work.pos)[u]
-        head_p, tail_p = u, (work.tour)[(i+s-1) % len(work.tour)]
-        prev_p, next_p = (work.tour)[(i-1) % tsp.num_node], (work.tour)[(i+s) % len(work.tour)]
+        head_p, tail_p = u, (work.tour)[(i + s - 1) % len(work.tour)]
+        prev_p, next_p = (work.tour)[(i - 1) % tsp.num_node], (work.tour)[(i + s) % len(work.tour)]
         # forward insertion
-        cur = tsp.dist(prev_p,head_p) + tsp.dist(tail_p,next_p) + tsp.dist(v,work.next(v))
-        new = tsp.dist(prev_p,next_p) + tsp.dist(v,head_p) + tsp.dist(tail_p,work.next(v))
+        cur = tsp.dist(prev_p, head_p) + tsp.dist(tail_p, next_p) + tsp.dist(v, work.next(v))
+        new = tsp.dist(prev_p, next_p) + tsp.dist(v, head_p) + tsp.dist(tail_p, work.next(v))
         fwd_diff = new - cur
         # check node v in sub-path
-        for h in range(-1,s):
-            if v == (work.tour)[(i+h) % len(work.tour)]:
+        for h in range(-1, s):
+            if v == (work.tour)[(i + h) % len(work.tour)]:
                 fwd_diff = float('inf')
         # backward insertion
-        cur = tsp.dist(prev_p,head_p) + tsp.dist(tail_p,next_p) + tsp.dist(work.prev(v),v)
-        new = tsp.dist(prev_p,next_p) + tsp.dist(work.prev(v),tail_p) + tsp.dist(head_p,v)
+        cur = tsp.dist(prev_p, head_p) + tsp.dist(tail_p, next_p) + tsp.dist(work.prev(v), v)
+        new = tsp.dist(prev_p, next_p) + tsp.dist(work.prev(v), tail_p) + tsp.dist(head_p, v)
         bak_diff = new - cur
         # check node prev_v in sub-path
-        for h in range(-1,s):
-            if work.prev(v) == (work.tour)[(i+h) % len(work.tour)]:
+        for h in range(-1, s):
+            if work.prev(v) == (work.tour)[(i + h) % len(work.tour)]:
                 bak_diff = float('inf')
         if fwd_diff <= bak_diff:
             return fwd_diff, 'fwd'
@@ -317,36 +321,36 @@ def or_opt(tsp, work, temp, size = OR_OPT_SIZE):
     def change_tour(tsp, work, s, u, v, oper):
         pop_pos = (work.pos)[u]
         if oper == 'fwd':
-            ins_pos = ((work.pos)[v]+1) % len(work.tour)
+            ins_pos = ((work.pos)[v] + 1) % len(work.tour)
         else:
             ins_pos = (work.pos)[v]
         # get sub-path
         subpath = []
         for h in range(s):
-            subpath.append((work.tour)[(pop_pos+h) % len(work.tour)])
+            subpath.append((work.tour)[(pop_pos + h) % len(work.tour)])
         if oper == 'bak':
             subpath.reverse()
         # move sub-path [i,...,i+s-1] to j+1 (forward) or j (backward)
         if pop_pos > ins_pos:
-            for h in range(pop_pos+s,ins_pos+len(work.tour)):
-                (work.tour)[(h-s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
+            for h in range(pop_pos + s, ins_pos + len(work.tour)):
+                (work.tour)[(h - s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
         else:
-            for h in range(pop_pos+s,ins_pos):
-                (work.tour)[(h-s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
+            for h in range(pop_pos + s, ins_pos):
+                (work.tour)[(h - s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
         for h in range(s):
-            (work.tour)[(ins_pos-s+h) % len(work.tour)] = subpath[h]
+            (work.tour)[(ins_pos - s + h) % len(work.tour)] = subpath[h]
         # update positions
         work.set_pos()
         # update objective value
         work.obj = work.length(tsp)
 
     # random Or-opt operation
-    s = random.randrange(1,size+1)
+    s = random.randrange(1, size + 1)
     u = random.choice(work.tour)
     v = random.choice(tsp.neighbor[u])
     # evaluate difference
     delta, oper = eval_diff(tsp, work, s, u, v)
-    if delta < 0 or math.exp(-delta/temp) > random.random():
+    if delta < 0 or math.exp(-delta / temp) > random.random():
         # change tour
         change_tour(tsp, work, s, u, v, oper)
         return True
@@ -367,31 +371,35 @@ def three_opt_type134(tsp, work, temp):
     def eval_diff(tsp, work, u, v, w):
         best, arg_best = float('inf'), None
         # type1
-        cur = tsp.dist(u,work.next(u)) + tsp.dist(work.prev(v),v) + tsp.dist(w,work.next(w))
-        new = tsp.dist(u,v) + tsp.dist(work.prev(v),work.next(w)) + tsp.dist(w,work.next(u))
-        if new - cur < best and (work.pos)[v] >= (work.pos)[u]+3 and (work.pos)[w] >= (work.pos)[v]+1:  # check node v and w
+        cur = tsp.dist(u, work.next(u)) + tsp.dist(work.prev(v), v) + tsp.dist(w, work.next(w))
+        new = tsp.dist(u, v) + tsp.dist(work.prev(v), work.next(w)) + tsp.dist(w, work.next(u))
+        if new - cur < best and (work.pos)[v] >= (work.pos)[u] + 3 and (work.pos)[w] >= (work.pos)[
+            v] + 1:  # check node v and w
             best, arg_best = new - cur, 'type1'
         # type3
-        cur = tsp.dist(u,work.next(u)) + tsp.dist(work.prev(v),v) + tsp.dist(work.prev(w),w)
-        new = tsp.dist(u,v) + tsp.dist(work.prev(w),work.prev(v)) + tsp.dist(work.next(u),w)
-        if new - cur < best and (work.pos)[v] >= (work.pos)[u]+3 and (work.pos)[w] >= (work.pos)[v]+2:  # check node v and w
+        cur = tsp.dist(u, work.next(u)) + tsp.dist(work.prev(v), v) + tsp.dist(work.prev(w), w)
+        new = tsp.dist(u, v) + tsp.dist(work.prev(w), work.prev(v)) + tsp.dist(work.next(u), w)
+        if new - cur < best and (work.pos)[v] >= (work.pos)[u] + 3 and (work.pos)[w] >= (work.pos)[
+            v] + 2:  # check node v and w
             best, arg_best = new - cur, 'type3'
         # type4
-        cur = tsp.dist(u,work.next(u)) + tsp.dist(v,work.next(v)) + tsp.dist(w,work.next(w))
-        new = tsp.dist(u,v) + tsp.dist(work.next(u),w) + tsp.dist(work.next(v),work.next(w))
-        if new - cur < best and (work.pos)[v] >= (work.pos)[u]+2 and (work.pos)[w] >= (work.pos)[v]+2:  # check node v and w
+        cur = tsp.dist(u, work.next(u)) + tsp.dist(v, work.next(v)) + tsp.dist(w, work.next(w))
+        new = tsp.dist(u, v) + tsp.dist(work.next(u), w) + tsp.dist(work.next(v), work.next(w))
+        if new - cur < best and (work.pos)[v] >= (work.pos)[u] + 2 and (work.pos)[w] >= (work.pos)[
+            v] + 2:  # check node v and w
             best, arg_best = new - cur, 'type4'
         return best, arg_best
 
     # change tour by 3-opt operation
     def change_tour(tsp, work, u, v, w, oper):
-        i,j,k = (work.pos)[u], (work.pos)[v],(work.pos)[w]
+        i, j, k = (work.pos)[u], (work.pos)[v], (work.pos)[w]
         if oper == 'type1':
-            (work.tour)[i+1:k+1] = (work.tour)[j:k+1] + (work.tour)[i+1:j]
+            (work.tour)[i + 1:k + 1] = (work.tour)[j:k + 1] + (work.tour)[i + 1:j]
         elif oper == 'type3':
-            (work.tour)[i+1:k] = (work.tour)[j:k] + list(reversed((work.tour)[i+1:j]))
+            (work.tour)[i + 1:k] = (work.tour)[j:k] + list(reversed((work.tour)[i + 1:j]))
         elif oper == 'type4':
-            (work.tour)[i+1:k+1] = list(reversed((work.tour)[i+1:j+1])) + list(reversed((work.tour)[j+1:k+1]))
+            (work.tour)[i + 1:k + 1] = list(reversed((work.tour)[i + 1:j + 1])) + list(
+                reversed((work.tour)[j + 1:k + 1]))
         # update positions
         work.set_pos()
         # update objective value
@@ -403,7 +411,7 @@ def three_opt_type134(tsp, work, temp):
     w = random.choice(tsp.neighbor[work.next(u)])
     # evaluate difference
     delta, oper = eval_diff(tsp, work, u, v, w)
-    if delta < 0 or math.exp(-delta/temp) > random.random():
+    if delta < 0 or math.exp(-delta / temp) > random.random():
         # change tour
         change_tour(tsp, work, u, v, w, oper)
         return True
@@ -422,17 +430,17 @@ def three_opt_type134(tsp, work, temp):
 def three_opt_type2(tsp, work, temp):
     # evaluate difference for 3-opt operation
     def eval_diff(tsp, work, u, v, w):
-        cur = tsp.dist(u,work.next(u)) + tsp.dist(work.prev(v),v) + tsp.dist(w,work.next(w))
-        new = tsp.dist(u,w) + tsp.dist(v,work.next(u)) + tsp.dist(work.prev(v),work.next(w))
-        if (work.pos)[v] >= (work.pos)[u]+3 and (work.pos)[w] >= (work.pos)[v]+1:
+        cur = tsp.dist(u, work.next(u)) + tsp.dist(work.prev(v), v) + tsp.dist(w, work.next(w))
+        new = tsp.dist(u, w) + tsp.dist(v, work.next(u)) + tsp.dist(work.prev(v), work.next(w))
+        if (work.pos)[v] >= (work.pos)[u] + 3 and (work.pos)[w] >= (work.pos)[v] + 1:
             return new - cur
         else:
             return float('inf')
 
     # change tour by 3-opt operation
     def change_tour(tsp, work, u, v, w):
-        i,j,k = (work.pos)[u], (work.pos)[v],(work.pos)[w]
-        (work.tour)[i+1:k+1] = list(reversed((work.tour)[j:k+1])) + (work.tour)[i+1:j]
+        i, j, k = (work.pos)[u], (work.pos)[v], (work.pos)[w]
+        (work.tour)[i + 1:k + 1] = list(reversed((work.tour)[j:k + 1])) + (work.tour)[i + 1:j]
         # update positions
         work.set_pos()
         # update objective value
@@ -444,7 +452,7 @@ def three_opt_type2(tsp, work, temp):
     w = random.choice(tsp.neighbor[u])
     # evaluate difference
     delta = eval_diff(tsp, work, u, v, w)
-    if delta < 0 or math.exp(-delta/temp) > random.random():
+    if delta < 0 or math.exp(-delta / temp) > random.random():
         # change tour
         change_tour(tsp, work, u, v, w)
         return True

@@ -8,14 +8,14 @@
 #   Date: 2022/05/03
 # --------------------------------------------------------------------
 
+import argparse
+import math
+import matplotlib.pyplot as plt
+import networkx as netx
+import random
 # import modules -----------------------------------------------------
 import sys
 import time
-import math
-import random
-import argparse
-import networkx as netx
-import matplotlib.pyplot as plt
 
 # constant -----------------------------------------------------------
 TIME_LIMIT = 5 * 60  # default time limit for multi-start local search
@@ -24,6 +24,7 @@ OR_OPT_SIZE = 3  # size of sub-path (or_opt_search)
 NB_LIST_SIZE = 5  # size of neighbor-list
 TABU_TENURE_RATIO = 1  # tabu tenure ratio
 INTVL_TIME = 1.0  # interval time for display logs
+
 
 # --------------------------------------------------------------------
 #   TSP data
@@ -46,7 +47,7 @@ class Tsp:
         # read data
         for i in range(len(data)):
             data[i] = (data[i].rstrip()).split()
-            data[i] = list(filter(lambda str:str != ':', data[i]))  # remove colon
+            data[i] = list(filter(lambda str: str != ':', data[i]))  # remove colon
             if len(data[i]) > 0:
                 data[i][0] = data[i][0].rstrip(':')
                 if data[i][0] == 'NAME':
@@ -66,9 +67,9 @@ class Tsp:
 
         # coord section
         self.coord = [(0.0, 0.0)] * self.num_node
-        line_cnt = sec_coord+1
+        line_cnt = sec_coord + 1
         for i in range(self.num_node):
-            (self.coord)[int(data[line_cnt][0])-1] = (float(data[line_cnt][1]),float(data[line_cnt][2]))
+            (self.coord)[int(data[line_cnt][0]) - 1] = (float(data[line_cnt][1]), float(data[line_cnt][2]))
             line_cnt += 1
 
     # print TSP data -------------------------------------------------
@@ -79,18 +80,18 @@ class Tsp:
         print('coord:\t{}'.format(self.coord))
 
     # calculate distance (rounded euclidian distance in 2D) ----------
-    def dist(self,v1,v2):
+    def dist(self, v1, v2):
         xd = float((self.coord)[v1][0] - (self.coord)[v2][0])
         yd = float((self.coord)[v1][1] - (self.coord)[v2][1])
-        return int(math.sqrt(xd * xd + yd * yd)+0.5)
+        return int(math.sqrt(xd * xd + yd * yd) + 0.5)
 
     # construct neighbor-list ----------------------------------------
     def gen_neighbor(self):
         self.neighbor = [[] for _ in range(self.num_node)]
         for i in range(self.num_node):
-            temp = [(self.dist(i,j),j) for j in range(self.num_node) if j != i]
+            temp = [(self.dist(i, j), j) for j in range(self.num_node) if j != i]
             temp.sort(key=lambda x: x[0])
-            (self.neighbor)[i] = [temp[h][1] for h in range(min(NB_LIST_SIZE,self.num_node))]
+            (self.neighbor)[i] = [temp[h][1] for h in range(min(NB_LIST_SIZE, self.num_node))]
 
 
 # --------------------------------------------------------------------
@@ -98,7 +99,7 @@ class Tsp:
 # --------------------------------------------------------------------
 class Work:
     # constructor ----------------------------------------------------
-    def __init__(self,tsp):
+    def __init__(self, tsp):
         self.tour = [i for i in range(tsp.num_node)]  # tour of salesman
         self.pos = [i for i in range(tsp.num_node)]  # position of nodes in tour
         self.obj = self.length(tsp)  # objective value
@@ -106,7 +107,7 @@ class Work:
         self.move = {}  # count of last updated
 
     # copy -----------------------------------------------------------
-    def copy(self,org):
+    def copy(self, org):
         self.tour = org.tour[:]
         self.pos = org.pos[:]
         self.obj = org.obj
@@ -114,10 +115,10 @@ class Work:
         self.move = (org.move).copy()
 
     # calculate tour length ------------------------------------------
-    def length(self,tsp):
+    def length(self, tsp):
         length = 0
         for i in range(len(self.tour)):
-            length += tsp.dist((self.tour)[i],(self.tour)[(i+1) % len(self.tour)])
+            length += tsp.dist((self.tour)[i], (self.tour)[(i + 1) % len(self.tour)])
         return length
 
     # set position ---------------------------------------------------
@@ -126,36 +127,36 @@ class Work:
             (self.pos)[(self.tour)[i]] = i
 
     # next node in tour ----------------------------------------------
-    def next(self,v):
-        return (self.tour)[((self.pos)[v]+1) % len(self.tour)]
+    def next(self, v):
+        return (self.tour)[((self.pos)[v] + 1) % len(self.tour)]
 
     # previous node in tour ------------------------------------------
-    def prev(self,v):
-        return (self.tour)[((self.pos)[v]-1) % len(self.tour)]
+    def prev(self, v):
+        return (self.tour)[((self.pos)[v] - 1) % len(self.tour)]
 
     # check tabu list ------------------------------------------------
     def get_tabu(self, u, v):
         if u > v:
-            u,v = v,u
-        if (u,v) in self.move and self.cnt <= (self.move)[(u,v)]:
+            u, v = v, u
+        if (u, v) in self.move and self.cnt <= (self.move)[(u, v)]:
             return True
         else:
             return False
 
     # set tabu list --------------------------------------------------
     def set_tabu(self, u, v):
-        tenure = random.randint(1,int(TABU_TENURE_RATIO * math.sqrt(len(self.tour)))+1)
+        tenure = random.randint(1, int(TABU_TENURE_RATIO * math.sqrt(len(self.tour))) + 1)
         if u <= v:
-            (self.move)[(u,v)] = self.cnt + tenure
+            (self.move)[(u, v)] = self.cnt + tenure
         else:
-            (self.move)[(v,u)] = self.cnt + tenure
+            (self.move)[(v, u)] = self.cnt + tenure
 
     # write WORK data ------------------------------------------------
-    def write(self,tsp):
+    def write(self, tsp):
         return self.length(tsp)
 
     # draw obtained tour ---------------------------------------------
-    def draw(self,tsp, filename):
+    def draw(self, tsp, filename):
         graph = netx.Graph()
         graph.add_nodes_from([i for i in range(tsp.num_node)])
         coord = {i: ((tsp.coord)[i][0], (tsp.coord)[i][1]) for i in range(tsp.num_node)}
@@ -176,12 +177,12 @@ class Work:
 def nearest_neighbor(tsp, work):
     print('\n[nearest neighbor algorithm]')
     # nearest neighbor
-    for i in range(1,tsp.num_node):
+    for i in range(1, tsp.num_node):
         # find nearest unvisited node
         min_dist = float('inf')
         arg_min_dist = None
-        for j in range(i,tsp.num_node):
-            dist = tsp.dist((work.tour)[i-1],(work.tour)[j])
+        for j in range(i, tsp.num_node):
+            dist = tsp.dist((work.tour)[i - 1], (work.tour)[j])
             if dist < min_dist:
                 min_dist = dist
                 arg_min_dist = j
@@ -227,10 +228,10 @@ def tabu_search(tsp, work, time_limit):
             break
         cur_time = time.time()
         if work.obj < best_obj:
-            print('{}\t{}\t{}*\t{:.2f}'.format(cur_work.cnt,cur_work.obj,work.obj,cur_time - start_time))
+            print('{}\t{}\t{}*\t{:.2f}'.format(cur_work.cnt, cur_work.obj, work.obj, cur_time - start_time))
             best_obj = work.obj
         elif cur_time - disp_time >= INTVL_TIME:
-            print('{}\t{}\t{}\t{:.2f}'.format(cur_work.cnt,cur_work.obj,work.obj,cur_time - start_time))
+            print('{}\t{}\t{}\t{:.2f}'.format(cur_work.cnt, cur_work.obj, work.obj, cur_time - start_time))
             disp_time = cur_time
 
 
@@ -245,20 +246,20 @@ def tabu_search(tsp, work, time_limit):
 def two_opt_search(tsp, work, cur_work):
     # evaluate difference for 2-opt operation
     def eval_diff(tsp, work, u, v):
-        cur = tsp.dist(u,work.next(u)) + tsp.dist(v,work.next(v))
-        new = tsp.dist(u,v) + tsp.dist(work.next(u),work.next(v))
+        cur = tsp.dist(u, work.next(u)) + tsp.dist(v, work.next(v))
+        new = tsp.dist(u, v) + tsp.dist(work.next(u), work.next(v))
         return new - cur
 
     # check tabu (delete edges)
     def check_tabu(work, u, v):
-        if work.get_tabu(u,work.next(u)) or work.get_tabu(v,work.next(v)):
+        if work.get_tabu(u, work.next(u)) or work.get_tabu(v, work.next(v)):
             return True
         else:
             return False
 
     # update tabu-list
     def update_tabu(work, u, v):
-        work.set_tabu(u,v)
+        work.set_tabu(u, v)
         work.set_tabu(work.next(u), work.next(v))
 
     # change tour by 2-opt operation
@@ -268,7 +269,7 @@ def two_opt_search(tsp, work, cur_work):
         else:
             i, j = (work.pos)[v], (work.pos)[u]
         # reverse sub-path [i+1,...,j]
-        (work.tour)[i+1:j+1] = list(reversed((work.tour)[i+1:j+1]))
+        (work.tour)[i + 1:j + 1] = list(reversed((work.tour)[i + 1:j + 1]))
         # update positions
         work.set_pos()
         # update objective value
@@ -276,10 +277,10 @@ def two_opt_search(tsp, work, cur_work):
 
     # 2-opt neighborhood search
     min_delta, arg_min_delta = float('inf'), None
-    nbhd = ((u,v)
+    nbhd = ((u, v)
             for u in cur_work.tour
             for v in (tsp.neighbor)[u])
-    for u,v in nbhd:
+    for u, v in nbhd:
         asp_flag = False
         # evaluate difference
         delta = eval_diff(tsp, cur_work, u, v)
@@ -289,9 +290,9 @@ def two_opt_search(tsp, work, cur_work):
             work.copy(cur_work)
             change_tour(tsp, work, u, v)
         # update best solution in the neighborhood
-        if delta < min_delta and (not check_tabu(cur_work,u,v) or asp_flag):
+        if delta < min_delta and (not check_tabu(cur_work, u, v) or asp_flag):
             min_delta = delta
-            arg_min_delta = (u,v)
+            arg_min_delta = (u, v)
     if arg_min_delta is not None:
         # update tabu-list
         update_tabu(cur_work, *arg_min_delta)
@@ -313,27 +314,27 @@ def two_opt_search(tsp, work, cur_work):
 #   size(I): length of subpath
 #   return: [True] improved
 # --------------------------------------------------------------------
-def or_opt_search(tsp, work, cur_work, size = OR_OPT_SIZE):
+def or_opt_search(tsp, work, cur_work, size=OR_OPT_SIZE):
     # evaluate difference for Or-opt operation
     def eval_diff(tsp, work, s, u, v):
         i = (work.pos)[u]
-        head_p, tail_p = u, (work.tour)[(i+s-1) % len(work.tour)]
-        prev_p, next_p = (work.tour)[(i-1) % tsp.num_node], (work.tour)[(i+s) % len(work.tour)]
+        head_p, tail_p = u, (work.tour)[(i + s - 1) % len(work.tour)]
+        prev_p, next_p = (work.tour)[(i - 1) % tsp.num_node], (work.tour)[(i + s) % len(work.tour)]
         # forward insertion
-        cur_fwd = tsp.dist(prev_p,head_p) + tsp.dist(tail_p,next_p) + tsp.dist(v,work.next(v))
-        new_fwd = tsp.dist(prev_p,next_p) + tsp.dist(v,head_p) + tsp.dist(tail_p,work.next(v))
+        cur_fwd = tsp.dist(prev_p, head_p) + tsp.dist(tail_p, next_p) + tsp.dist(v, work.next(v))
+        new_fwd = tsp.dist(prev_p, next_p) + tsp.dist(v, head_p) + tsp.dist(tail_p, work.next(v))
         diff_fwd = new_fwd - cur_fwd
         # check node v in subpath
-        for h in range(-1,s):
-            if v == (work.tour)[(i+h) % len(work.tour)]:
+        for h in range(-1, s):
+            if v == (work.tour)[(i + h) % len(work.tour)]:
                 diff_fwd = float('inf')
         # backward insertion
-        cur_bak = tsp.dist(prev_p,head_p) + tsp.dist(tail_p,next_p) + tsp.dist(work.prev(v),v)
-        new_bak = tsp.dist(prev_p,next_p) + tsp.dist(work.prev(v),tail_p) + tsp.dist(head_p,v)
+        cur_bak = tsp.dist(prev_p, head_p) + tsp.dist(tail_p, next_p) + tsp.dist(work.prev(v), v)
+        new_bak = tsp.dist(prev_p, next_p) + tsp.dist(work.prev(v), tail_p) + tsp.dist(head_p, v)
         diff_bak = new_bak - cur_bak
         # check node prev_v in sub-path
-        for h in range(-1,s):
-            if work.prev(v) == (work.tour)[(i+h) % len(work.tour)]:
+        for h in range(-1, s):
+            if work.prev(v) == (work.tour)[(i + h) % len(work.tour)]:
                 diff_bak = float('inf')
         if diff_fwd <= diff_bak:
             return diff_fwd, 'fwd'
@@ -343,11 +344,13 @@ def or_opt_search(tsp, work, cur_work, size = OR_OPT_SIZE):
     # check tabu-list (delete edges)
     def check_tabu(work, s, u, v, oper):
         i = (work.pos)[u]
-        head_p, tail_p = u, (work.tour)[(i+s-1) % len(work.tour)]
-        prev_p, next_p = (work.tour)[(i-1) % tsp.num_node], (work.tour)[(i+s) % len(work.tour)]
-        if oper == 'fwd' and (work.get_tabu(prev_p, head_p) or work.get_tabu(tail_p, next_p) or work.get_tabu(v, work.next(v))):
+        head_p, tail_p = u, (work.tour)[(i + s - 1) % len(work.tour)]
+        prev_p, next_p = (work.tour)[(i - 1) % tsp.num_node], (work.tour)[(i + s) % len(work.tour)]
+        if oper == 'fwd' and (
+                work.get_tabu(prev_p, head_p) or work.get_tabu(tail_p, next_p) or work.get_tabu(v, work.next(v))):
             return True
-        elif oper == 'bak' and (work.get_tabu(prev_p, head_p) or work.get_tabu(tail_p, next_p) or work.get_tabu(work.prev(v), v)):
+        elif oper == 'bak' and (
+                work.get_tabu(prev_p, head_p) or work.get_tabu(tail_p, next_p) or work.get_tabu(work.prev(v), v)):
             return True
         else:
             return False
@@ -355,38 +358,38 @@ def or_opt_search(tsp, work, cur_work, size = OR_OPT_SIZE):
     # update tabu-list
     def update_tabu(tsp, work, s, u, v, oper):
         i = (work.pos)[u]
-        head_p, tail_p = u, (work.tour)[(i+s-1) % len(work.tour)]
-        prev_p, next_p = (work.tour)[(i-1) % tsp.num_node], (work.tour)[(i+s) % len(work.tour)]
-        work.set_tabu(prev_p,next_p)
+        head_p, tail_p = u, (work.tour)[(i + s - 1) % len(work.tour)]
+        prev_p, next_p = (work.tour)[(i - 1) % tsp.num_node], (work.tour)[(i + s) % len(work.tour)]
+        work.set_tabu(prev_p, next_p)
         if oper == 'fwd':
-            work.set_tabu(v,head_p)
-            work.set_tabu(tail_p,work.next(v))
+            work.set_tabu(v, head_p)
+            work.set_tabu(tail_p, work.next(v))
         else:
-            work.set_tabu(work.prev(v),tail_p)
-            work.set_tabu(head_p,v)
+            work.set_tabu(work.prev(v), tail_p)
+            work.set_tabu(head_p, v)
 
     # change tour by Or-opt operation
     def change_tour(tsp, work, s, u, v, oper):
         pop_pos = (work.pos)[u]
         if oper == 'fwd':
-            ins_pos = ((work.pos)[v]+1) % len(work.tour)
+            ins_pos = ((work.pos)[v] + 1) % len(work.tour)
         else:
             ins_pos = (work.pos)[v]
         # get sub-path
         subpath = []
         for h in range(s):
-            subpath.append((work.tour)[(pop_pos+h) % len(work.tour)])
+            subpath.append((work.tour)[(pop_pos + h) % len(work.tour)])
         if oper == 'bak':
             subpath.reverse()
         # move sub-path [i,...,i+s-1] to j+1 (forward) or j (backward)
         if pop_pos > ins_pos:
-            for h in range(pop_pos+s,ins_pos+len(work.tour)):
-                (work.tour)[(h-s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
+            for h in range(pop_pos + s, ins_pos + len(work.tour)):
+                (work.tour)[(h - s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
         else:
-            for h in range(pop_pos+s,ins_pos):
-                (work.tour)[(h-s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
+            for h in range(pop_pos + s, ins_pos):
+                (work.tour)[(h - s) % len(work.tour)] = (work.tour)[h % len(work.tour)]
         for h in range(s):
-            (work.tour)[(ins_pos-s+h) % len(work.tour)] = subpath[h]
+            (work.tour)[(ins_pos - s + h) % len(work.tour)] = subpath[h]
         # update positions
         work.set_pos()
         # update objective value
@@ -394,11 +397,11 @@ def or_opt_search(tsp, work, cur_work, size = OR_OPT_SIZE):
 
     # Or-opt neighborhood search
     min_delta, arg_min_delta, oper_min_delta = float('inf'), None, None
-    nbhd = ((s,u,v)
-            for s in range(1,size+1)
+    nbhd = ((s, u, v)
+            for s in range(1, size + 1)
             for u in cur_work.tour
             for v in (tsp.neighbor)[u])
-    for s,u,v in nbhd:
+    for s, u, v in nbhd:
         asp_flag = False
         # evaluate difference
         delta, oper = eval_diff(tsp, cur_work, s, u, v)
@@ -408,9 +411,9 @@ def or_opt_search(tsp, work, cur_work, size = OR_OPT_SIZE):
             work.copy(cur_work)
             change_tour(tsp, work, s, u, v, oper)
         # update best solution in the neighborhood
-        if delta < min_delta and (not check_tabu(cur_work,s,u,v,oper) or asp_flag):
+        if delta < min_delta and (not check_tabu(cur_work, s, u, v, oper) or asp_flag):
             min_delta = delta
-            arg_min_delta = (s,u,v)
+            arg_min_delta = (s, u, v)
             oper_min_delta = oper
     if arg_min_delta is not None:
         # update tabu-list
@@ -437,39 +440,43 @@ def three_opt_search(tsp, work, cur_work):
     def eval_diff_type134(tsp, work, u, v, w):
         diff, oper = float('inf'), None
         # evaluate type1
-        cur_oper1 = tsp.dist(u,work.next(u)) + tsp.dist(work.prev(v),v) + tsp.dist(w,work.next(w))
-        new_oper1 = tsp.dist(u,v) + tsp.dist(work.prev(v),work.next(w)) + tsp.dist(w,work.next(u))
-        if new_oper1 - cur_oper1 < diff and (work.pos)[v] >= (work.pos)[u]+3 and (work.pos)[w] >= (work.pos)[v]+1:
+        cur_oper1 = tsp.dist(u, work.next(u)) + tsp.dist(work.prev(v), v) + tsp.dist(w, work.next(w))
+        new_oper1 = tsp.dist(u, v) + tsp.dist(work.prev(v), work.next(w)) + tsp.dist(w, work.next(u))
+        if new_oper1 - cur_oper1 < diff and (work.pos)[v] >= (work.pos)[u] + 3 and (work.pos)[w] >= (work.pos)[v] + 1:
             diff, oper = new_oper1 - cur_oper1, 'type1'
         # evaluate type3
-        cur_oper3 = tsp.dist(u,work.next(u)) + tsp.dist(work.prev(v),v) + tsp.dist(work.prev(w),w)
-        new_oper3 = tsp.dist(u,v) + tsp.dist(work.prev(w),work.prev(v)) + tsp.dist(work.next(u),w)
-        if new_oper3 - cur_oper3 < diff and (work.pos)[v] >= (work.pos)[u]+3 and (work.pos)[w] >= (work.pos)[v]+2:
+        cur_oper3 = tsp.dist(u, work.next(u)) + tsp.dist(work.prev(v), v) + tsp.dist(work.prev(w), w)
+        new_oper3 = tsp.dist(u, v) + tsp.dist(work.prev(w), work.prev(v)) + tsp.dist(work.next(u), w)
+        if new_oper3 - cur_oper3 < diff and (work.pos)[v] >= (work.pos)[u] + 3 and (work.pos)[w] >= (work.pos)[v] + 2:
             diff, oper = new_oper3 - cur_oper3, 'type3'
         # evaluate type4
-        cur_oper4 = tsp.dist(u,work.next(u)) + tsp.dist(v,work.next(v)) + tsp.dist(w,work.next(w))
-        new_oper4 = tsp.dist(u,v) + tsp.dist(work.next(u),w) + tsp.dist(work.next(v),work.next(w))
-        if new_oper4 - cur_oper4 < diff and (work.pos)[v] >= (work.pos)[u]+2 and (work.pos)[w] >= (work.pos)[v]+2:
+        cur_oper4 = tsp.dist(u, work.next(u)) + tsp.dist(v, work.next(v)) + tsp.dist(w, work.next(w))
+        new_oper4 = tsp.dist(u, v) + tsp.dist(work.next(u), w) + tsp.dist(work.next(v), work.next(w))
+        if new_oper4 - cur_oper4 < diff and (work.pos)[v] >= (work.pos)[u] + 2 and (work.pos)[w] >= (work.pos)[v] + 2:
             diff, oper = new_oper4 - cur_oper4, 'type4'
         return diff, oper
 
     def eval_diff_type2(tsp, work, u, v, w):
-        cur_oper2 = tsp.dist(u,work.next(u)) + tsp.dist(work.prev(v),v) + tsp.dist(w,work.next(w))
-        new_oper2 = tsp.dist(u,w) + tsp.dist(v,work.next(u)) + tsp.dist(work.prev(v),work.next(w))
-        if (work.pos)[v] >= (work.pos)[u]+3 and (work.pos)[w] >= (work.pos)[v]+1:
+        cur_oper2 = tsp.dist(u, work.next(u)) + tsp.dist(work.prev(v), v) + tsp.dist(w, work.next(w))
+        new_oper2 = tsp.dist(u, w) + tsp.dist(v, work.next(u)) + tsp.dist(work.prev(v), work.next(w))
+        if (work.pos)[v] >= (work.pos)[u] + 3 and (work.pos)[w] >= (work.pos)[v] + 1:
             return new_oper2 - cur_oper2, 'type2'
         else:
             return float('inf'), None
 
     # check tabu list (delete edges)
     def check_tabu(work, u, v, w, oper):
-        if oper == 'type1' and (work.get_tabu(u,work.next(u)) or work.get_tabu(work.prev(v),v) or work.get_tabu(w,work.next(w))):
+        if oper == 'type1' and (
+                work.get_tabu(u, work.next(u)) or work.get_tabu(work.prev(v), v) or work.get_tabu(w, work.next(w))):
             return True
-        elif oper == 'type2' and (work.get_tabu(u,work.next(u)) or work.get_tabu(work.prev(v),v) or work.get_tabu(w,work.next(w))):
+        elif oper == 'type2' and (
+                work.get_tabu(u, work.next(u)) or work.get_tabu(work.prev(v), v) or work.get_tabu(w, work.next(w))):
             return True
-        elif oper == 'type3' and (work.get_tabu(u,work.next(u)) or work.get_tabu(work.prev(v),v) or work.get_tabu(work.prev(w),w)):
+        elif oper == 'type3' and (
+                work.get_tabu(u, work.next(u)) or work.get_tabu(work.prev(v), v) or work.get_tabu(work.prev(w), w)):
             return True
-        elif oper == 'type4' and (work.get_tabu(u,work.next(u)) or work.get_tabu(v,work.next(v)) or work.get_tabu(w,work.next(w))):
+        elif oper == 'type4' and (
+                work.get_tabu(u, work.next(u)) or work.get_tabu(v, work.next(v)) or work.get_tabu(w, work.next(w))):
             return True
         else:
             return False
@@ -477,33 +484,34 @@ def three_opt_search(tsp, work, cur_work):
     # update tabu-list
     def update_tabu(work, u, v, w, oper):
         if oper == 'type1':
-            work.set_tabu(u,v)
-            work.set_tabu(w,work.next(u))
-            work.set_tabu(work.prev(v),work.next(w))
+            work.set_tabu(u, v)
+            work.set_tabu(w, work.next(u))
+            work.set_tabu(work.prev(v), work.next(w))
         elif oper == 'type2':
-            work.set_tabu(u,w)
-            work.set_tabu(v,work.next(u))
-            work.set_tabu(work.prev(v),work.next(w))
+            work.set_tabu(u, w)
+            work.set_tabu(v, work.next(u))
+            work.set_tabu(work.prev(v), work.next(w))
         elif oper == 'type3':
-            work.set_tabu(u,v)
-            work.set_tabu(work.prev(w),work.prev(v))
-            work.set_tabu(work.next(u),w)
+            work.set_tabu(u, v)
+            work.set_tabu(work.prev(w), work.prev(v))
+            work.set_tabu(work.next(u), w)
         elif oper == 'type4':
-            work.set_tabu(u,v)
-            work.set_tabu(work.next(u),w)
-            work.set_tabu(work.next(v),work.next(w))
+            work.set_tabu(u, v)
+            work.set_tabu(work.next(u), w)
+            work.set_tabu(work.next(v), work.next(w))
 
     # change tour by 3-opt operation
     def change_tour(tsp, work, u, v, w, oper):
-        i,j,k = (work.pos)[u], (work.pos)[v],(work.pos)[w]
+        i, j, k = (work.pos)[u], (work.pos)[v], (work.pos)[w]
         if oper == 'type1':
-            (work.tour)[i+1:k+1] = (work.tour)[j:k+1] + (work.tour)[i+1:j]
+            (work.tour)[i + 1:k + 1] = (work.tour)[j:k + 1] + (work.tour)[i + 1:j]
         elif oper == 'type2':
-            (work.tour)[i+1:k+1] = list(reversed((work.tour)[j:k+1])) + (work.tour)[i+1:j]
+            (work.tour)[i + 1:k + 1] = list(reversed((work.tour)[j:k + 1])) + (work.tour)[i + 1:j]
         elif oper == 'type3':
-            (work.tour)[i+1:k] = (work.tour)[j:k] + list(reversed((work.tour)[i+1:j]))
+            (work.tour)[i + 1:k] = (work.tour)[j:k] + list(reversed((work.tour)[i + 1:j]))
         elif oper == 'type4':
-            (work.tour)[i+1:k+1] = list(reversed((work.tour)[i+1:j+1])) + list(reversed((work.tour)[j+1:k+1]))
+            (work.tour)[i + 1:k + 1] = list(reversed((work.tour)[i + 1:j + 1])) + list(
+                reversed((work.tour)[j + 1:k + 1]))
         # update positions
         work.set_pos()
         # update objective value
@@ -512,11 +520,11 @@ def three_opt_search(tsp, work, cur_work):
     # 3-opt neighborhood search
     min_delta, arg_min_delta, oper_min_delta = float('inf'), None, None
     # search type 1,3,4
-    nbhd = ((u,v,w)
+    nbhd = ((u, v, w)
             for u in cur_work.tour
             for v in (tsp.neighbor)[u]
             for w in (tsp.neighbor)[cur_work.next(u)])
-    for u,v,w in nbhd:
+    for u, v, w in nbhd:
         asp_flag = False
         # evaluate difference
         delta, oper = eval_diff_type134(tsp, cur_work, u, v, w)
@@ -526,16 +534,16 @@ def three_opt_search(tsp, work, cur_work):
             work.copy(cur_work)
             change_tour(tsp, work, u, v, w, oper)
         # update best solution in the neighborhood
-        if delta < min_delta and (not check_tabu(cur_work,u,v,w,oper) or asp_flag):
+        if delta < min_delta and (not check_tabu(cur_work, u, v, w, oper) or asp_flag):
             min_delta = delta
             arg_min_delta = (u, v, w)
             oper_min_delta = oper
     # search type 2
-    nbhd = ((u,v,w)
+    nbhd = ((u, v, w)
             for u in cur_work.tour
             for v in (tsp.neighbor)[cur_work.next(u)]
             for w in (tsp.neighbor)[u])
-    for u,v,w in nbhd:
+    for u, v, w in nbhd:
         asp_flag = False
         # evaluate difference
         delta, oper = eval_diff_type2(tsp, cur_work, u, v, w)
@@ -545,7 +553,7 @@ def three_opt_search(tsp, work, cur_work):
             work.copy(cur_work)
             change_tour(tsp, work, u, v, w, oper)
         # update best solution in the neighborhood
-        if delta < min_delta and (not check_tabu(cur_work,u,v,w,oper) and asp_flag):
+        if delta < min_delta and (not check_tabu(cur_work, u, v, w, oper) and asp_flag):
             min_delta = delta
             arg_min_delta = (u, v, w)
             oper_min_delta = oper
@@ -584,8 +592,8 @@ class Bunch:
     def __init__(self, **kwds):
         self.__dict__.update(kwds)
 
-def solve(tsp_file, image_file, runs=10):
 
+def solve(tsp_file, image_file, runs=10):
     results = list()
 
     exec_times = list()
@@ -593,7 +601,6 @@ def solve(tsp_file, image_file, runs=10):
     args = Bunch(filename=tsp_file, time=TIME_LIMIT)
 
     for seed in range(0, runs):
-
         random.seed(seed)
 
         # set starting time

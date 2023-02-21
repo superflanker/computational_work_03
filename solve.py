@@ -7,21 +7,22 @@ Authors: Augusto Mathias Adams - augusto.adams@ufpr.br - GRR20172143
 Solvers to TSP
 """
 
-from solvers import *
 import json
 
-algorithms = {"solve_sa":{"tsp_files/ch130.tsp": {"image_file": "latex/images/solve_sa_ch130_{:d}.png",
-                                                  "results_file": "results/results_solve_sa_ch130.json",
-                                                  "exec_time_file": "results/exec_timer_solve_sa_ch130.json"},
-                          "tsp_files/ch150.tsp": {"image_file": "latex/images/solve_sa_ch150_{:d}.png",
-                                                  "results_file": "results/results_solve_sa_ch150.json",
-                                                  "exec_time_file": "results/exec_timer_solve_sa_ch150.json"},
-                          "tsp_files/eil101.tsp": {"image_file": "latex/images/solve_sa_eil101_{:d}.png",
-                                                   "results_file": "results/results_solve_sa_eil101.json",
-                                                   "exec_time_file": "results/exec_timer_solve_sa_eil101.json"},
-                          "tsp_files/lin318.tsp": {"image_file": "latex/images/solve_sa_lin318_{:d}.png",
-                                                   "results_file": "results/results_solve_sa_lin318.json",
-                                                   "exec_time_file": "results/exec_timer_solve_sa_lin318.json"}},
+from solvers import *
+
+algorithms = {"solve_sa": {"tsp_files/ch130.tsp": {"image_file": "latex/images/solve_sa_ch130_{:d}.png",
+                                                   "results_file": "results/results_solve_sa_ch130.json",
+                                                   "exec_time_file": "results/exec_timer_solve_sa_ch130.json"},
+                           "tsp_files/ch150.tsp": {"image_file": "latex/images/solve_sa_ch150_{:d}.png",
+                                                   "results_file": "results/results_solve_sa_ch150.json",
+                                                   "exec_time_file": "results/exec_timer_solve_sa_ch150.json"},
+                           "tsp_files/eil101.tsp": {"image_file": "latex/images/solve_sa_eil101_{:d}.png",
+                                                    "results_file": "results/results_solve_sa_eil101.json",
+                                                    "exec_time_file": "results/exec_timer_solve_sa_eil101.json"},
+                           "tsp_files/lin318.tsp": {"image_file": "latex/images/solve_sa_lin318_{:d}.png",
+                                                    "results_file": "results/results_solve_sa_lin318.json",
+                                                    "exec_time_file": "results/exec_timer_solve_sa_lin318.json"}},
               "solve_mls": {"tsp_files/ch130.tsp": {"image_file": "latex/images/solve_mls_ch130_{:d}.png",
                                                     "results_file": "results/results_solve_mls_ch130.json",
                                                     "exec_time_file": "results/exec_timer_solve_mls_ch130.json"},
@@ -42,7 +43,7 @@ algorithms = {"solve_sa":{"tsp_files/ch130.tsp": {"image_file": "latex/images/so
                                                      "exec_time_file": "results/exec_timer_solve_tabu_ch150.json"},
                              "tsp_files/eil101.tsp": {"image_file": "latex/images/solve_tabu_eil101_{:d}.png",
                                                       "results_file": "results/results_solve_tabu_eil101.json",
-                                                      "exec_time_file": "results/exec_timer_solve_tabu_eil101.json"},                           
+                                                      "exec_time_file": "results/exec_timer_solve_tabu_eil101.json"},
                              "tsp_files/lin318.tsp": {"image_file": "latex/images/solve_tabu_lin318_{:d}.png",
                                                       "results_file": "results/results_solve_tabu_lin318.json",
                                                       "exec_time_file": "results/exec_timer_solve_tabu_lin318.json"}},
@@ -70,7 +71,6 @@ for solver in solvers:
     solver = solvers[solver]
 
     for problem in problems:
-
         exec_time, results = solver(problem, problems[problem]["image_file"])
 
         with open(problems[problem]["results_file"], "w") as f:

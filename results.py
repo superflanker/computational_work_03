@@ -1,4 +1,3 @@
-
 """
 Computational Work 03 - Combinatorial Optimization
 Authors: Augusto Mathias Adams - augusto.adams@ufpr.br - GRR20172143
@@ -11,7 +10,6 @@ Result Analysis
 import json
 import numpy as np
 import pandas as pd
-
 
 solvers = {"solve_sa": "Simulated Annealing",
            "solve_mls": "Random Multi-start LS",
@@ -32,7 +30,6 @@ results = list()
 
 for problem in problems:
     for solver in solvers:
-
         filename = "results/results_{:s}_{:s}.json".format(solver, problem)
 
         with open(filename, "r") as f:
