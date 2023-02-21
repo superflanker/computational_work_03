@@ -1,0 +1,55 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZsh{}   main}
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{k}{class} \PYG{n+nc}{Bunch}\PYG{p}{:}
+    \PYG{k}{def} \PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{o}{**}\PYG{n}{kwds}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n+nv+vm}{\PYGZus{}\PYGZus{}dict\PYGZus{}\PYGZus{}}\PYG{o}{.}\PYG{n}{update}\PYG{p}{(}\PYG{n}{kwds}\PYG{p}{)}
+
+
+\PYG{k}{def} \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n}{tsp\PYGZus{}file}\PYG{p}{,}
+          \PYG{n}{image\PYGZus{}file}\PYG{p}{,}
+          \PYG{n}{runs}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{):}
+
+    \PYG{n}{results} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{()}
+
+    \PYG{n}{exec\PYGZus{}times} \PYG{o}{=} \PYG{n+nb}{list}\PYG{p}{()}
+
+    \PYG{n}{args} \PYG{o}{=} \PYG{n}{Bunch}\PYG{p}{(}\PYG{n}{filename}\PYG{o}{=}\PYG{n}{tsp\PYGZus{}file}\PYG{p}{,}
+    \PYG{n}{time}\PYG{o}{=}\PYG{n}{TIME\PYGZus{}LIMIT}\PYG{p}{)}
+
+    \PYG{k}{for} \PYG{n}{seed} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{runs}\PYG{p}{):}
+        \PYG{n}{random}\PYG{o}{.}\PYG{n}{seed}\PYG{p}{(}\PYG{n}{seed}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} set starting time}
+        \PYG{n}{start\PYGZus{}time} \PYG{o}{=} \PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{()}
+
+        \PYG{c+c1}{\PYGZsh{} read instance}
+        \PYG{n}{tsp} \PYG{o}{=} \PYG{n}{Tsp}\PYG{p}{()}
+        \PYG{n}{tsp}\PYG{o}{.}\PYG{n}{read}\PYG{p}{(}\PYG{n}{args}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} construct neighbor\PYGZhy{}list}
+        \PYG{n}{tsp}\PYG{o}{.}\PYG{n}{gen\PYGZus{}neighbor}\PYG{p}{()}
+
+        \PYG{c+c1}{\PYGZsh{} solve TSP}
+        \PYG{n}{work} \PYG{o}{=} \PYG{n}{Work}\PYG{p}{(}\PYG{n}{tsp}\PYG{p}{)}
+        \PYG{n}{simulated\PYGZus{}annealing}\PYG{p}{(}\PYG{n}{tsp}\PYG{p}{,}
+                            \PYG{n}{work}\PYG{p}{,}
+                            \PYG{n}{args}\PYG{o}{.}\PYG{n}{time}\PYG{p}{)}
+        \PYG{n}{results}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{work}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n}{tsp}\PYG{p}{))}
+
+        \PYG{c+c1}{\PYGZsh{} set completion time}
+        \PYG{n}{end\PYGZus{}time} \PYG{o}{=} \PYG{n}{time}\PYG{o}{.}\PYG{n}{time}\PYG{p}{()}
+
+        \PYG{n}{exec\PYGZus{}times}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{end\PYGZus{}time} \PYG{o}{\PYGZhy{}}
+        \PYG{n}{start\PYGZus{}time}\PYG{p}{)}
+
+        \PYG{c+c1}{\PYGZsh{} display computation time}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s1}{Total time:}\PYG{l+s+se}{\PYGZbs{}t}\PYG{l+s+si}{\PYGZpc{}.3f}\PYG{l+s+s1}{ sec\PYGZsq{}}
+        \PYG{o}{\PYGZpc{}} \PYG{p}{(}\PYG{n}{end\PYGZus{}time} \PYG{o}{\PYGZhy{}} \PYG{n}{start\PYGZus{}time}\PYG{p}{))}
+
+        \PYG{n}{work}\PYG{o}{.}\PYG{n}{draw}\PYG{p}{(}\PYG{n}{tsp}\PYG{p}{,}
+       \PYG{n}{image\PYGZus{}file}\PYG{o}{.}\PYG{n}{format}\PYG{p}{(}\PYG{n}{seed}\PYG{p}{))}
+
+    \PYG{k}{return} \PYG{n}{exec\PYGZus{}times}\PYG{p}{,} \PYG{n}{results}
+\end{Verbatim}

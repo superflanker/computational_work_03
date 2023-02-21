@@ -1,0 +1,7 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{NAME}\PYG{p}{:} \PYG{n}{ch130}
+\PYG{n}{TYPE}\PYG{p}{:} \PYG{n}{TSP}
+\PYG{n}{COMMENT}\PYG{p}{:} \PYG{l+m+mi}{130} \PYG{n}{city} \PYG{n}{problem} \PYG{p}{(}\PYG{n}{Churritz}\PYG{p}{)}
+\PYG{n}{DIMENSION}\PYG{p}{:} \PYG{l+m+mi}{130}
+\PYG{n}{EDGE\PYGZus{}WEIGHT\PYGZus{}TYPE}\PYG{p}{:} \PYG{n}{EUC\PYGZus{}2D}
+\end{Verbatim}

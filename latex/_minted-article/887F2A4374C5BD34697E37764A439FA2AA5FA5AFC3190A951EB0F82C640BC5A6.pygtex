@@ -1,0 +1,23 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+
+    \PYG{c+c1}{\PYGZsh{} write WORK data}
+    \PYG{k}{def} \PYG{n+nf}{write}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{tsp}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{length}\PYG{p}{(}\PYG{n}{tsp}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} draw obtained tour}
+    \PYG{k}{def} \PYG{n+nf}{draw}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,}\PYG{n}{tsp}\PYG{p}{,} \PYG{n}{filename}\PYG{p}{):}
+        \PYG{n}{graph} \PYG{o}{=} \PYG{n}{netx}\PYG{o}{.}\PYG{n}{Graph}\PYG{p}{()}
+        \PYG{n}{graph}\PYG{o}{.}\PYG{n}{add\PYGZus{}nodes\PYGZus{}from}\PYG{p}{([}\PYG{n}{i} \PYG{k}{for} \PYG{n}{i}
+              \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{tsp}\PYG{o}{.}\PYG{n}{num\PYGZus{}node}\PYG{p}{)])}
+        \PYG{n}{coord} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{n}{i}\PYG{p}{:} \PYG{p}{((}\PYG{n}{tsp}\PYG{o}{.}\PYG{n}{coord}\PYG{p}{)[}\PYG{n}{i}\PYG{p}{][}\PYG{l+m+mi}{0}\PYG{p}{],}
+        	\PYG{p}{(}\PYG{n}{tsp}\PYG{o}{.}\PYG{n}{coord}\PYG{p}{)[}\PYG{n}{i}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{])} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in}
+        	 \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{tsp}\PYG{o}{.}\PYG{n}{num\PYGZus{}node}\PYG{p}{)\PYGZcb{}}
+        \PYG{n}{netx}\PYG{o}{.}\PYG{n}{add\PYGZus{}path}\PYG{p}{(}\PYG{n}{graph}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{tour}
+        \PYG{o}{+} \PYG{p}{[(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{tour}\PYG{p}{)[}\PYG{l+m+mi}{0}\PYG{p}{]])}
+        \PYG{n}{netx}\PYG{o}{.}\PYG{n}{draw}\PYG{p}{(}\PYG{n}{graph}\PYG{p}{,} \PYG{n}{coord}\PYG{p}{,}
+        \PYG{n}{with\PYGZus{}labels}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+        \PYG{n}{plt}\PYG{o}{.}\PYG{n}{axis}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}off\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{plt}\PYG{o}{.}\PYG{n}{savefig}\PYG{p}{(}\PYG{n}{filename}\PYG{p}{,}
+        \PYG{n}{dpi}\PYG{o}{=}\PYG{l+m+mi}{600}\PYG{p}{)}
+
+\end{Verbatim}
